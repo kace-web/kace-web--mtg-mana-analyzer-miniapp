@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101518">
+  <title>MTG Mana Analyzer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app-shell">
+    <header class="topbar">
+      <button id="primaryMenuButton" class="menu-button" type="button" aria-label="Open navigation" data-i18n-aria-label="shell.openNavigation" aria-expanded="false">☰</button>
+      <div class="brand-mark" aria-hidden="true">M</div>
+      <div class="brand-copy">
+        <p class="eyebrow" data-i18n="app.eyebrow">Calculator & analysis engine</p>
+        <h1 data-i18n="app.title">MTG Mana Analyzer</h1>
+      </div>
+      <span id="providerBadge" class="status-pill muted" data-i18n="pipeline.providerUnavailable">Provider unavailable</span>
+      <button id="toolsMenuButton" class="menu-button" type="button" aria-label="Open tools" data-i18n-aria-label="shell.openTools" aria-expanded="false">⋯</button>
+    </header>
+
+    <nav id="primaryMenu" class="menu-drawer primary-menu" hidden aria-label="Primary navigation">
+      <p class="menu-heading" data-i18n="shell.primaryLabel">Navigate</p>
+      <button type="button" data-view="analyzerView" data-i18n="shell.analyze">Analyze deck</button>
+      <button type="button" data-view="calculatorView" data-i18n="shell.calculators">Calculators</button>
+      <button type="button" data-view="sampleView" data-i18n="shell.sample">Sample / Try it</button>
+      <button type="button" data-view="roadmapView" data-i18n="shell.roadmap">Roadmap / status</button>
+      <button type="button" data-view="guideView" data-i18n="shell.guide">Guide</button>
+      <button type="button" data-view="aboutView" data-i18n="shell.about">About</button>
+    </nav>
+    <nav id="toolsMenu" class="menu-drawer tools-menu" hidden aria-label="Settings and tools">
+      <p class="menu-heading" data-i18n="shell.toolsLabel">Settings & tools</p>
+      <label><span data-i18n="shell.format">Format</span><select id="appFormat"></select></label>
+      <button id="themeButton" type="button">Use light theme</button>
+      <button id="savedScenariosNav" type="button" data-view="calculatorView" data-i18n="shell.savedScenarios">Saved scenarios</button>
+    </nav>
+
+    <main class="workspace">
+      <div id="shellStatus" class="shell-status" aria-live="polite"></div>
+
+      <section id="analyzerView" class="app-view" aria-labelledby="deckInputHeading">
+        <section class="intro-panel panel">
+          <div>
+            <p class="kicker" data-i18n="app.kicker">Evidence-first deck math</p>
+            <h2 data-i18n="app.subtitle">Prepare a deck for transparent mana questions.</h2>
+            <p class="muted-copy" data-i18n="app.instructions">Paste a main deck list. The pipeline preserves every line, resolves only cards in this deck, and never fills missing facts from memory.</p>
+          </div>
+          <div class="scope-note"><span class="scope-number">60</span><span data-i18n="app.scope">main-deck cards · format-aware</span></div>
+        </section>
+
+        <section class="panel input-panel" aria-labelledby="deckInputHeading">
+          <div class="section-heading">
+            <div><p class="section-label" data-i18n="deck.inputLabel">Deck input</p><h2 id="deckInputHeading" data-i18n="deck.inputHeading">Paste your deck</h2></div>
+            <button id="loadSavedButton" class="button secondary" type="button" data-i18n="deck.loadSaved">Load saved</button>
+          </div>
+          <label class="format-inline"><span data-i18n="shell.format">Format</span><select id="deckFormat"></select></label>
+          <label class="sr-only" for="deckText" data-i18n="deck.inputLabel">Deck input</label>
+          <textarea id="deckText" rows="11" data-i18n-placeholder="deck.placeholder" placeholder="4 Card Name&#10;4 Another Card"></textarea>
+          <div class="form-footer"><p class="helper" data-i18n="deck.formatHelp">Format: quantity, card name, optional (SET) collector number.</p><button id="parseButton" class="button primary" type="button" data-i18n="deck.parse">Parse deck</button></div>
+        </section>
+
+        <section id="pipelineStatus" class="notice" hidden aria-live="polite"></section>
+        <section id="summaryPanel" class="panel" hidden aria-labelledby="summaryHeading">
+          <div class="section-heading compact"><div><p class="section-label" data-i18n="summary.label">Pipeline status</p><h2 id="summaryHeading" data-i18n="summary.heading">Deck coverage</h2></div><button id="resolveButton" class="button secondary" type="button" data-i18n="summary.resolve">Check for card data</button></div>
+          <div id="summaryGrid" class="summary-grid"></div><div id="warningList" class="warning-list" hidden></div>
+        </section>
+        <section id="cardsPanel" class="panel" hidden aria-labelledby="cardsHeading">
+          <div class="section-heading compact"><div><p class="section-label" data-i18n="cards.label">Deck records</p><h2 id="cardsHeading" data-i18n="cards.heading">Cards in this deck</h2></div><span id="cardCountLabel" class="muted-copy"></span></div>
+          <div id="cardList" class="card-list"></div>
+        </section>
+        <section id="factPanel" class="panel fact-panel" hidden aria-labelledby="factHeading">
+          <div class="section-heading compact"><div><p class="section-label" data-i18n="fact.label">Manual evidence</p><h2 id="factHeading" data-i18n="fact.heading">Confirm or correct this card</h2></div><button id="closeFactButton" class="icon-button" type="button" aria-label="Close card editor" data-i18n-aria-label="fact.close">×</button></div>
+          <p id="factContext" class="muted-copy"></p>
+          <form id="factForm"><input id="factPhysicalId" type="hidden"><div class="field-grid">
+            <label><span data-i18n="fact.canonicalName">Canonical name</span><input id="factCanonicalName" type="text"></label><label><span data-i18n="fact.setCode">Set code</span><input id="factSetCode" type="text"></label><label><span data-i18n="fact.collectorNumber">Collector number</span><input id="factCollectorNumber" type="text"></label><label><span data-i18n="fact.manaCost">Printed mana cost</span><input id="factManaCost" type="text" data-i18n-placeholder="fact.manaCostPlaceholder"></label><label><span data-i18n="fact.manaValue">Printed mana value</span><input id="factManaValue" type="number" min="0" step="1"></label><label class="wide"><span data-i18n="fact.typeLine">Type line</span><input id="factTypeLine" type="text"></label><label class="wide"><span data-i18n="fact.rulesText">Rules text</span><textarea id="factRulesText" rows="4"></textarea></label>
+          </div><label class="wide"><span data-i18n="fact.landClassification">Land classification</span><select id="factBasicLand"><option value="" data-i18n="fact.basicUnknown">Unknown</option><option value="true" data-i18n="fact.basicYes">Basic land</option><option value="false" data-i18n="fact.basicNo">Non-basic</option></select></label><label class="wide"><span data-i18n="fact.explanation">Reason or source note</span><textarea id="factExplanation" rows="2"></textarea></label><div class="form-footer"><p class="helper" data-i18n="fact.evidenceNote">Manual facts are user evidence. Original source evidence is never deleted.</p><button class="button primary" type="submit" data-i18n="fact.save">Save evidence</button></div></form>
+        </section>
+      </section>
+
+      <section id="calculatorView" class="app-view" hidden aria-labelledby="calculatorHeading">
+        <section id="calculatorPanel" class="panel calculator-panel" aria-labelledby="calculatorHeading">
+          <div class="section-heading"><div><p class="section-label" data-i18n="calculators.label">Calculators</p><h2 id="calculatorHeading" data-i18n="calculators.heading">Ask a focused math question</h2></div><span class="status-pill good" data-i18n="calculators.deterministic">Deterministic engine</span></div>
+          <p class="muted-copy" data-i18n="calculators.instructions">Use manual values or populate from the current deck. Calculator edits never change your deck.</p>
+          <p id="calculatorContext" class="calculator-context" aria-live="polite"></p>
+          <div class="calculator-toolbar"><label><span data-i18n="calculators.inputSource">Input source</span><select id="calculatorSource"><option value="manual" data-i18n="calculators.manual">Manual</option><option value="deck" data-i18n="calculators.currentDeck">Current deck</option></select></label><label><span data-i18n="calculators.format">Format</span><select id="calculatorFormat"></select></label><label><span data-i18n="calculators.calculator">Calculator</span><select id="calculatorType"><option value="probability" data-i18n="calculators.types.probability">Probability</option><option value="multiCard" data-i18n="calculators.types.multiCard">Multi-card / combo</option><option value="manaPips" data-i18n="calculators.types.manaPips">Mana pips</option><option value="sourceProbability" data-i18n="calculators.types.sourceProbability">Mana source probability</option><option value="landPlayability" data-i18n="calculators.types.landPlayability">Land playability</option><option value="ramp" data-i18n="calculators.types.ramp">Ramp</option><option value="pay2Life" data-i18n="calculators.types.pay2Life">Pay-2-life lands</option></select></label><label><span data-i18n="calculators.method">Method</span><select id="calculatorMethod"></select></label></div>
+          <div class="calculator-block-heading"><h3 data-i18n="calculators.inputsHeading">Inputs</h3><span data-i18n="calculators.inputsHelp">Edit these values before calculating.</span></div><div id="calculatorMethodExplanation" class="method-explanation" aria-live="polite"></div><div id="calculatorFields" class="calculator-fields"></div><div class="calculator-actions"><button id="calculateButton" class="button primary" type="button" data-i18n="calculators.calculate">Calculate</button><button id="saveScenarioButton" class="button secondary" type="button" data-i18n="calculators.saveScenario">Save scenario</button><select id="savedScenarioSelect" aria-label="Saved calculator scenarios" data-i18n-aria-label="calculators.savedScenarios"><option value="" data-i18n="calculators.noSavedScenarios">Saved scenarios</option></select><button id="loadScenarioButton" class="button secondary" type="button" data-i18n="calculators.loadScenario">Load</button></div><p id="calculatorStatus" class="calculator-status" hidden aria-live="polite"></p><div class="calculator-block-heading result-block-heading"><h3 data-i18n="calculators.resultHeading">Result</h3><span data-i18n="calculators.resultHelp">The result is based only on the displayed inputs and assumptions.</span></div><div id="calculatorResult" class="calculator-result" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="sampleView" class="app-view" hidden aria-labelledby="sampleHeading">
+        <section class="panel sample-panel"><div class="section-heading"><div><p class="section-label" data-i18n="sample.label">Sample / Try it</p><h2 id="sampleHeading" data-i18n="sample.heading">See the workflow without a deck</h2></div><span class="status-pill warn" data-i18n="sample.demoBadge">Demo data</span></div><p class="muted-copy" data-i18n="sample.instructions">These examples are synthetic demonstrations, not card recommendations or verified source records.</p><label class="format-inline sample-format"><span data-i18n="sample.format">Sample format</span><select id="sampleFormat"><option value="" data-i18n="sample.noFormat">No format preference</option></select></label><div class="sample-actions"><button id="sampleCardButton" class="button secondary" type="button" data-i18n="sample.cardButton">Show sample card</button><button id="sampleDeckButton" class="button secondary" type="button" data-i18n="sample.deckButton">Load sample deck</button><button id="sampleCalculatorButton" class="button primary" type="button" data-i18n="sample.calculatorButton">Open calculator demo</button></div><div id="sampleOutput" class="sample-output" aria-live="polite"></div></section>
+      </section>
+
+      <section id="roadmapView" class="app-view" hidden aria-labelledby="roadmapHeading">
+        <section class="panel roadmap-intro"><div class="section-heading"><div><p class="section-label" data-i18n="roadmap.label">Development status</p><h2 id="roadmapHeading" data-i18n="roadmap.heading">What is built, visible, and planned</h2></div><span class="status-pill good" data-i18n="roadmap.scopeBadge">Current scope</span></div><p class="muted-copy" data-i18n="roadmap.intro">This roadmap reflects the behavior available in the application today. It is a status view, not a required workflow.</p></section>
+        <section class="roadmap-section" aria-labelledby="roadmapBuildHeading"><div class="roadmap-section-heading"><div><p class="section-label" data-i18n="roadmap.currentBuildLabel">Current build</p><h2 id="roadmapBuildHeading" data-i18n="roadmap.currentBuildHeading">What this application can do now</h2></div></div><div id="roadmapCurrentBuild" class="roadmap-grid"></div></section>
+        <section class="roadmap-section" aria-labelledby="roadmapPhasesHeading"><div class="roadmap-section-heading"><div><p class="section-label" data-i18n="roadmap.phasesLabel">Phase roadmap</p><h2 id="roadmapPhasesHeading" data-i18n="roadmap.phasesHeading">Development status by phase</h2></div></div><div id="roadmapPhases" class="roadmap-grid phases-grid"></div></section>
+        <section class="roadmap-section" aria-labelledby="roadmapCalculatorsHeading"><div class="roadmap-section-heading"><div><p class="section-label" data-i18n="roadmap.calculatorsLabel">Calculator roadmap</p><h2 id="roadmapCalculatorsHeading" data-i18n="roadmap.calculatorsHeading">Implemented tools and future work</h2></div></div><div id="roadmapCalculators" class="roadmap-calculator-groups"></div></section>
+        <section class="roadmap-section" aria-labelledby="roadmapMethodsHeading"><div class="roadmap-section-heading"><div><p class="section-label" data-i18n="roadmap.methodsLabel">Method transparency</p><h2 id="roadmapMethodsHeading" data-i18n="roadmap.methodsHeading">Input → method → assumptions → result</h2></div></div><p class="roadmap-copy" data-i18n="roadmap.methodsBody">The calculators expose manual or deck-derived inputs, selected methods, and assumptions. Exact probability, source-count, and simulation methods can answer different questions, so legitimate results may differ without one method being universally correct.</p></section>
+        <section class="roadmap-section" aria-labelledby="roadmapNotesHeading"><div class="roadmap-section-heading"><div><p class="section-label" data-i18n="roadmap.notesLabel">Development notes</p><h2 id="roadmapNotesHeading" data-i18n="roadmap.notesHeading">Known issues, limitations, and experiments</h2></div></div><div id="roadmapNotes" class="roadmap-notes"></div></section>
+      </section>
+
+      <section id="guideView" class="app-view" hidden aria-labelledby="guideHeading"><section class="panel prose-panel"><p class="section-label" data-i18n="guide.label">Guide</p><h2 id="guideHeading" data-i18n="guide.heading">Use the analyzer with clear assumptions</h2><div class="guide-grid"><article><h3 data-i18n="guide.whatTitle">What it does</h3><p data-i18n="guide.what">It turns deck facts and explicit assumptions into transparent mana and probability questions.</p></article><article><h3 data-i18n="guide.deckTitle">Using a deck</h3><p data-i18n="guide.deck">Choose a format, paste a list, and parse it. Resolved evidence is kept separate from unresolved cards.</p></article><article><h3 data-i18n="guide.formatsTitle">Formats</h3><p data-i18n="guide.formats">Constructed uses four-copy rules, Singleton uses one copy, and Brawl uses 59 main-deck cards plus one commander.</p></article><article><h3 data-i18n="guide.termsTitle">Mana terms</h3><p data-i18n="guide.terms">A pip is a colored or colorless symbol in a cost. A source is a card or ability that can produce a relevant mana type under stated conditions.</p></article><article><h3 data-i18n="guide.methodsTitle">Methods</h3><p data-i18n="guide.methods">Source counts estimate how many sources a deck contains. Exact probability measures a specified draw event. Simulation estimates repeated trials. They answer different questions.</p></article><article><h3 data-i18n="guide.payTitle">Pay-2-life lands</h3><p data-i18n="guide.pay">The optional life analysis estimates access and expected payment under the selected play/draw, turn, and payment assumptions. It does not assume every land enters untapped.</p></article><article><h3 data-i18n="guide.assumptionsTitle">Assumptions matter</h3><p data-i18n="guide.assumptions">Opening hand, draw behavior, play or draw, mulligans, and conditional effects can change a result. Read the assumptions beside every result.</p></article><article><h3 data-i18n="guide.differencesTitle">Why results differ</h3><p data-i18n="guide.differences">Different MTG calculators may use different populations, draw horizons, source definitions, or models. Compare assumptions before comparing percentages.</p></article><article><h3 data-i18n="guide.startTitle">Getting started</h3><p data-i18n="guide.start">Choose any destination. Calculators work manually without a deck; a loaded deck can provide optional starting values.</p></article><article><h3 data-i18n="guide.manualTitle">Manual vs current deck</h3><p data-i18n="guide.manual">Manual values are yours to set. Current-deck values are derived where supported and remain editable assumptions rather than changes to the deck.</p></article></div></section></section>
+
+      <section id="aboutView" class="app-view" hidden aria-labelledby="aboutHeading"><section class="panel prose-panel"><p class="section-label" data-i18n="about.label">About</p><h2 id="aboutHeading" data-i18n="about.projectName">MTG Mana Analyzer</h2><p data-i18n="about.purpose">An independent tool for inspecting mana requirements, access, sources, and uncertainty in constructed decks.</p><h3 data-i18n="about.projectTitle">Project</h3><p data-i18n="about.projectInfo">This project is being developed as a focused, evidence-first calculator. Developer and organization details have not been supplied.</p><div class="legal-box"><h3 data-i18n="legal.title">Legal and attribution</h3><p data-i18n="legal.body">Magic: The Gathering and related intellectual property belong to their respective rights holders. This is an unofficial independent tool and is not affiliated with or endorsed by Wizards of the Coast. Card information is used for informational and analytical purposes. Any future external card-data provider attribution will be preserved.</p></div></section></section>
+    </main>
+    <footer class="footer"><span data-i18n="app.footer">Evidence-first pipeline · Deterministic calculators for transparent analysis.</span><button id="footerAboutButton" class="text-button" type="button" data-view="aboutView" data-i18n="about.legalLink">Legal / attribution</button></footer>
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
